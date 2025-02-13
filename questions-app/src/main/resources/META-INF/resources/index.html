@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Questions</title>
+    <style>
+        input {
+            width: 80%; /* Adjust width (80% of parent container) */
+            max-width: 500px; /* Prevent it from becoming too large */
+        }
+    </style>
+</head>
+<body>
+    <h1>Lecture Questions</h1>
+
+    <input type="text" id="questionInput" placeholder="Enter a question, idea or a comment.">
+    <button onclick="postQuestion()">Submit</button>
+    <p id="questionResponse"></p>
+
+    <button onclick="fetchTopics()">Get Topics</button>
+    <p id="topicResponse"></p>
+
+    <p><hr>You can find source codes (and the Docker example) <a href="https://github.com/petri-rantanen/lecture-questions" target="_blank">here</a>. Slides for todays lecture can be downloaded from <a href="/slides.pdf" target="_blank">here</a>.</p>
+
+    <p><hr>Data is submitted anonymously. No personal information is collected. All submitted data will be removed after the lecture. The data will <i>not</i> be used for <i>any</i> purpose after the lecture.<hr>By using this application you accept to conform with OpenAI's Terms & Policies available <a href="https://openai.com/policies/" target="_blank">here</a>.</p>
+
+    <script>
+        async function fetchTopics() {
+            const id = getQueryParam('id');
+            if (!id) {
+                alert("Please give valid id parameter.");
+                return;
+            }
+
+            let topicResponse = document.getElementById('topicResponse');
+            topicResponse.innerText = 'Retrieving...';
+
+            try {
+                const response = await fetch(`/topics/topic?id=`+id);
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+                const text = await response.text();
+                topicResponse.innerText = text;
+            } catch (error) {
+                topicResponse.innerText = `Failed to fetch: ${error.message}`;
+            }
+        }
+
+        async function postQuestion() {
+            const id = getQueryParam('id');
+            if (!id) {
+                alert("Please enter valid id parameter.");
+                return;
+            }
+
+            let questionInput = document.getElementById('questionInput');
+            let question = questionInput.value;
+            if (!question) {
+                alert("Please enter a question, idea or an opinion.");
+                return;
+            }
+
+            let questionResponse = document.getElementById('questionResponse');
+            questionResponse.innerText = 'Submitting...';
+
+            question = encodeURIComponent(question);
+
+            try {
+                const response = await fetch('/topics/question?id='+id+'&question='+question, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+                const text = await response.text();
+                questionResponse.innerText = text;
+                questionInput.value = '';
+            } catch (error) {
+                questionResponse.innerText = `Failed to fetch: ${error.message}`;
+            }
+        }
+
+        // Function to get query parameters from the URL
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+    </script>
+</body>
+</html>
